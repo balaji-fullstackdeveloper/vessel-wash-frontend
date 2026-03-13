@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Login - PG Vessel Manager</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h2>PG Vessel Rotation - Admin Login</h2>
+
+<div id="adminLoginBox">
+
+<h3>Admin Authentication</h3>
+<input id="adminId" placeholder="Admin ID">
+<input id="adminPassword" type="password" placeholder="Password">
+<button onclick="adminLogin()">Login</button>
+
+</div>
+
+<script>
+function adminLogin(){
+    let adminId = document.getElementById("adminId").value;
+    let password = document.getElementById("adminPassword").value;
+    
+    if(adminId === "admin" && password === "admin123"){
+        localStorage.setItem("userType", "admin");
+        window.location.href = "admin.html";
+    } else {
+        alert("Invalid admin credentials");
+    }
+}
+</script>
+
+</body>
+</html>

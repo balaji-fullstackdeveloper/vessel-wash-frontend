@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PG Vessel Manager</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    
+<!-- Snow Animation -->
+<div class="snow-container" id="snowContainer"></div>
+
+<h2>PG Vessel Rotation</h2>
+
+<div id="app">
+
+<h3> <br> <span id="current-date" class="text-blue-400"></span></h3>
+<div>
+    <div>
+        <div>
+            <h3>Daily Quotes</h3>
+            <p id="dailyQuote"></p>
+        </div>
+       </div>
+       <h3> Today's Duty<br> <span id="current-date" class="text-blue-400"></span></h3>
+        <div class="card">
+        Morning: <span id="morning"></span>
+        </div>
+        
+        <div class="card">
+        Afternoon: <span id="afternoon"></span>
+        </div>
+        
+        <div class="card">
+        Night: <span id="night"></span>
+        </div>
+        
+</div>
+
+
+
+
+<h3>Weekly Schedule</h3>
+
+<div class="schedule-table-scroll">
+    <table id="weeklySchedule" class="schedule-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Morning</th>
+                <th>Afternoon</th>
+                <th>Night</th>
+            </tr>
+        </thead>
+        <tbody id="scheduleBody">
+        </tbody>
+    </table>
+</div>
+
+<!-- <h3>Analytics</h3>
+
+<div id="stats"></div>
+
+<button onclick="showHistory()" style="margin-top: 20px;">View History</button>
+
+
+<!-- <div id="historyModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeHistory()">&times;</span>
+        <h2>Work History</h2>
+        <div id="historyContent"></div>
+    </div>
+</div> --> 
+
+<div style="margin-top: 20px;">
+   
+    <button onclick="goToAdmin()">Admin Panel</button>
+</div>
+
+</div>
+
+<script src="app-db.js"></script>
+
+<script>
+    // Snow animation
+    function createSnowflakes() {
+        const snowContainer = document.getElementById('snowContainer');
+        const snowflake = document.createElement('div');
+        snowflake.className = 'snowflake';
+        snowflake.style.left = Math.random() * window.innerWidth + 'px';
+        snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
+        snowflake.style.opacity = Math.random();
+        snowContainer.appendChild(snowflake);
+
+        setTimeout(() => {
+            snowflake.remove();
+        }, 5000);
+    }
+
+    // Create snowflakes periodically
+    setInterval(createSnowflakes, 300);
+</script>
+<script>
+    // JavaScript to get and display the current date
+    const dateElement = document.getElementById('current-date');
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    
+    // This will show: Friday, March 13, 2026
+    dateElement.textContent = new Date().toLocaleDateString('en-IN', options);
+</script>
+
+<script>
+    // Thirukkural Daily Quote Functionality
+    async function loadThirukkural() {
+        try {
+            const response = await fetch('thirukkural.json');
+            const data = await response.json();
+            
+            // Get current day of year (1-366) to select Thirukkural
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            // Select Thirukkural based on day (modulo 1330 since there are 1330 Thirukkural)
+            const kuralIndex = (dayOfYear % data.kural.length);
+            const selectedKural = data.kural[kuralIndex];
+            
+            // Display the Thirukkural
+            const dailyQuoteElement = document.getElementById('dailyQuote');
+            dailyQuoteElement.innerHTML = `
+                <h3><strong>Thirukkural ${selectedKural.Number}:</strong></h1>
+                <strong><em>${selectedKural.Line1}</em></strong><br>
+                <strong><em>${selectedKural.Line2}</em></strong><br>
+                <br>
+
+                <strong>Explanation:</strong> ${selectedKural.mv}
+            `;
+            
+        } catch (error) {
+            console.error('Error loading Thirukkural:', error);
+            document.getElementById('dailyQuote').textContent = 'Unable to load daily Thirukkural';
+        }
+    }
+    
+    // Load Thirukkural when page loads
+    loadThirukkural();
+</script>
+</body>
+</html>

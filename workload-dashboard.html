@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workload Management – Meal-Based Energy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              background: "#050816",
+              surface: "#0f172a",
+              accent: "#22c55e",
+              accentSoft: "#22c55e33",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-100">
+    <div id="root" class="min-h-screen"></div>
+
+    <!-- React / Recharts via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+
+    <script type="text/babel">
+      const {
+        LineChart,
+        Line,
+        XAxis,
+        YAxis,
+        Tooltip,
+        ResponsiveContainer,
+        CartesianGrid,
+        ReferenceArea,
+      } = Recharts;
+
+      const PROFILES = {
+        A: {
+          id: "A",
+          name: "Profile A – Morning & Night",
+          description:
+            "High energy in the morning, dip mid-afternoon, second wind in the evening. Great for deep focus twice a day.",
+          highlights: [
+            "Deep work: 8 AM – 12 PM",
+            "Recovery / admin: 1 PM – 4 PM",
+            "Deep work (creative / planning): 7 PM – 9 PM",
+          ],
+          energyCurve: [
+            { label: "6 AM", hour: 6, energy: 55 },
+            { label: "8 AM", hour: 8, energy: 85 },
+            { label: "10 AM", hour: 10, energy: 95 },
+            { label: "12 PM", hour: 12, energy: 88 },
+            { label: "2 PM", hour: 14, energy: 55 },
+            { label: "4 PM", hour: 16, energy: 50 },
+            { label: "6 PM", hour: 18, energy: 65 },
+            { label: "7 PM", hour: 19, energy: 80 },
+            { label: "9 PM", hour: 21, energy: 75 },
+          ],
+          taskBlocks: [
+            {
+              window: "8 AM – 12 PM",
+              title: "Deep work / problem solving",
+              priority: "High",
+              notes: "Most complex, cognitively heavy tasks.",
+            },
+            {
+              window: "12 PM – 4 PM",
+              title: "Shallow work & collaboration",
+              priority: "Medium",
+              notes: "Meetings, emails, reviews during the dip.",
+            },
+            {
+              window: "7 PM – 9 PM",
+              title: "Creative work / planning",
+              priority: "High",
+              notes: "Strategic thinking, ideation, weekly planning.",
+            },
+            {
+              window: "Anytime",
+              title: "Maintenance tasks",
+              priority: "Low",
+              notes: "Quick fixes, simple errands.",
+            },
+          ],
+          deepWorkAreas: [
+            { start: 8, end: 12, label: "Morning deep work" },
+            { start: 19, end: 21, label: "Evening deep work" },
+          ],
+        },
+        B: {
+          id: "B",
+          name: "Profile B – Afternoon / OMAD",
+          description:
+            "Fasted clarity in the morning, peak energy after your main meal, and gradual tapering at night.",
+          highlights: [
+            "High-focus work: 10 AM – 1 PM",
+            "Heaviest load: 1 PM – 3 PM",
+            "Wind down: after 6 PM",
+          ],
+          energyCurve: [
+            { label: "6 AM", hour: 6, energy: 65 },
+            { label: "9 AM", hour: 9, energy: 80 },
+            { label: "11 AM", hour: 11, energy: 90 },
+            { label: "1 PM", hour: 13, energy: 95 },
+            { label: "3 PM", hour: 15, energy: 90 },
+            { label: "5 PM", hour: 17, energy: 70 },
+            { label: "7 PM", hour: 19, energy: 55 },
+            { label: "9 PM", hour: 21, energy: 40 },
+          ],
+          taskBlocks: [
+            {
+              window: "8 AM – 11 AM",
+              title: "Fasted focus work",
+              priority: "High",
+              notes: "Analytical work while fasted and clear.",
+            },
+            {
+              window: "11 AM – 3 PM",
+              title: "Heaviest tasks / delivery",
+              priority: "High",
+              notes: "Ship code, key decisions, presentations.",
+            },
+            {
+              window: "3 PM – 6 PM",
+              title: "Collaboration & follow‑through",
+              priority: "Medium",
+              notes: "Reviews, pairing, stakeholder syncs.",
+            },
+            {
+              window: "After 6 PM",
+              title: "Admin & shutdown",
+              priority: "Low",
+              notes: "Planning tomorrow, inbox zero, light work.",
+            },
+          ],
+          deepWorkAreas: [{ start: 10, end: 15, label: "Heaviest tasks" }],
+        },
+        C: {
+          id: "C",
+          name: "Profile C – Three Meals",
+          description:
+            "Stable energy with small dips after meals. Ideal for a classic 9–5 schedule with spaced breaks.",
+          highlights: [
+            "Steady 9 AM – 12 PM",
+            "Light dip after lunch: 1 PM – 2 PM",
+            "Strong again: 2 PM – 5 PM",
+          ],
+          energyCurve: [
+            { label: "7 AM", hour: 7, energy: 65 },
+            { label: "9 AM", hour: 9, energy: 80 },
+            { label: "11 AM", hour: 11, energy: 85 },
+            { label: "1 PM", hour: 13, energy: 70 },
+            { label: "3 PM", hour: 15, energy: 80 },
+            { label: "5 PM", hour: 17, energy: 75 },
+            { label: "7 PM", hour: 19, energy: 60 },
+          ],
+          taskBlocks: [
+            {
+              window: "9 AM – 11 AM",
+              title: "Core project work",
+              priority: "High",
+              notes: "Main feature work, main deliverables.",
+            },
+            {
+              window: "11 AM – 1 PM",
+              title: "Meetings & collaboration",
+              priority: "Medium",
+              notes: "Team syncs, stand‑ups, cross‑team work.",
+            },
+            {
+              window: "2 PM – 4 PM",
+              title: "Deep focus continuation",
+              priority: "High",
+              notes: "Second wave of focused execution.",
+            },
+            {
+              window: "4 PM – 5 PM",
+              title: "Wrap‑up & admin",
+              priority: "Low",
+              notes: "Code reviews, documentation, planning.",
+            },
+          ],
+          deepWorkAreas: [
+            { start: 9, end: 11, label: "Morning focus" },
+            { start: 14, end: 16, label: "Afternoon focus" },
+          ],
+        },
+      };
+
+      const PRIORITY_COLORS = {
+        High: "bg-rose-500/20 text-rose-300 border border-rose-500/40",
+        Medium: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
+        Low: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40",
+      };
+
+      function PriorityBadge({ level }) {
+        return (
+          <span
+            className={
+              "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium " +
+              (PRIORITY_COLORS[level] || PRIORITY_COLORS.Medium)
+            }
+          >
+            {level} priority
+          </span>
+        );
+      }
+
+      function EnergyGraph({ profile }) {
+        if (!profile) return null;
+
+        return (
+          <div className="bg-surface/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 sm:p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-50">
+                  Energy Graph
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400">
+                  How your energy moves across the day for{" "}
+                  <span className="font-medium text-emerald-300">
+                    {profile.name}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 min-h-[220px] sm:min-h-[260px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={profile.energyCurve} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="energyLine" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: "#9ca3af", fontSize: 11 }}
+                    axisLine={{ stroke: "#334155" }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#9ca3af", fontSize: 11 }}
+                    axisLine={{ stroke: "#334155" }}
+                    domain={[0, 100]}
+                    tickFormatter={(v) => `${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#020617",
+                      border: "1px solid #1f2937",
+                      borderRadius: "0.75rem",
+                      padding: "0.75rem",
+                      color: "#e5e7eb",
+                      fontSize: "0.75rem",
+                    }}
+                    labelStyle={{ color: "#9ca3af", marginBottom: 4 }}
+                    formatter={(value) => [`${value}/100 energy`, "Level"]}
+                  />
+
+                  {profile.deepWorkAreas?.map((area, idx) => (
+                    <ReferenceArea
+                      key={idx}
+                      x1={profile.energyCurve.find((p) => p.hour >= area.start)?.label}
+                      x2={profile.energyCurve.find((p) => p.hour <= area.end && p.hour >= area.start)?.label}
+                      y1={0}
+                      y2={100}
+                      fill="#22c55e"
+                      fillOpacity={0.05}
+                      stroke="#22c55e"
+                      strokeOpacity={0.25}
+                    />
+                  ))}
+
+                  <Line
+                    type="monotone"
+                    dataKey="energy"
+                    stroke="url(#energyLine)"
+                    strokeWidth={3}
+                    dot={{ r: 3, stroke: "#22c55e", strokeWidth: 1, fill: "#020617" }}
+                    activeDot={{ r: 5, fill: "#22c55e" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            {profile.deepWorkAreas?.length > 0 && (
+              <div className="mt-3 text-xs text-slate-400">
+                <p className="font-medium text-slate-200 mb-1">
+                  Highlighted lanes:
+                </p>
+                <ul className="space-y-1">
+                  {profile.deepWorkAreas.map((a, idx) => (
+                    <li key={idx} className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-4 rounded-full bg-emerald-400" />
+                      <span>
+                        {a.label}:{" "}
+                        <span className="text-emerald-300">
+                          {a.start}:00 – {a.end}:00
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      function TaskPlan({ profile }) {
+        if (!profile) return null;
+
+        return (
+          <div className="bg-surface/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-50">
+                Task Plan & Priorities
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                Suggested workload around your meal rhythm using{" "}
+                <span className="font-medium text-emerald-300">
+                  High / Medium / Low
+                </span>{" "}
+                priority buckets.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:gap-4">
+              {profile.taskBlocks.map((block, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-3 sm:px-4 sm:py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:border-emerald-500/40 transition-colors"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-semibold text-slate-50">
+                        {block.title}
+                      </h3>
+                      <PriorityBadge level={block.priority} />
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                      {block.notes}
+                    </p>
+                  </div>
+                  <div className="text-xs sm:text-sm text-emerald-300 font-medium sm:text-right">
+                    {block.window}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-2 border-t border-slate-800 pt-3 text-xs sm:text-sm text-slate-400">
+              <p className="font-medium text-slate-200 mb-1">
+                How to use this:
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  Map your actual tasks into these windows based on{" "}
+                  <span className="text-emerald-300">priority</span> and{" "}
+                  <span className="text-emerald-300">effort</span>.
+                </li>
+                <li>
+                  Keep admin & comms in{" "}
+                  <span className="text-amber-300">Medium</span> windows and
+                  protect{" "}
+                  <span className="text-rose-300 font-medium">
+                    High priority
+                  </span>{" "}
+                  slots from meetings.
+                </li>
+              </ul>
+            </div>
+          </div>
+        );
+      }
+
+      function ProfileSelector({ selectedId, onSelect }) {
+        return (
+          <div className="bg-surface/80 backdrop-blur-md border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-50">
+                  Meal Profile
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Choose how you typically eat, and we’ll align your{" "}
+                  <span className="text-emerald-300">workload intensity</span>{" "}
+                  to your natural energy.
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-wide text-emerald-300">
+                React · Tailwind · Recharts
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {Object.values(PROFILES).map((profile) => {
+                const isActive = selectedId === profile.id;
+                return (
+                  <button
+                    key={profile.id}
+                    onClick={() => onSelect(profile.id)}
+                    className={
+                      "group rounded-xl border px-3 py-3 text-left transition-all " +
+                      (isActive
+                        ? "border-emerald-500/70 bg-emerald-500/15 shadow-[0_0_0_1px_rgba(16,185,129,0.3)]"
+                        : "border-slate-800 bg-slate-900/40 hover:border-emerald-500/40 hover:bg-slate-900/70")
+                    }
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={
+                            "h-7 w-7 flex items-center justify-center rounded-full text-xs font-semibold " +
+                            (isActive
+                              ? "bg-emerald-500 text-slate-950"
+                              : "bg-slate-800 text-slate-200")
+                          }
+                        >
+                          {profile.id}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-100">
+                          {profile.name}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] leading-snug text-slate-400">
+                      {profile.description}
+                    </p>
+                    <ul className="mt-2 space-y-1 text-[11px] text-slate-400">
+                      {profile.highlights.map((h, idx) => (
+                        <li key={idx} className="flex gap-1.5">
+                          <span className="mt-1 h-1 w-1 rounded-full bg-emerald-400" />
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      function App() {
+        const [selectedProfileId, setSelectedProfileId] = React.useState("A");
+        const profile = PROFILES[selectedProfileId];
+
+        return (
+          <div className="min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
+            <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
+              <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-50">
+                    Workload Management by Meal Profile
+                  </h1>
+                  <p className="mt-1 text-xs sm:text-sm text-slate-400 max-w-2xl">
+                    Match your{" "}
+                    <span className="text-emerald-300 font-medium">
+                      task intensity
+                    </span>{" "}
+                    to your{" "}
+                    <span className="text-emerald-300 font-medium">
+                      eating pattern
+                    </span>{" "}
+                    for sustainable focus across the day.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1">
+                    Dark mode first
+                  </span>
+                  <span className="hidden sm:inline text-slate-600">•</span>
+                  <span className="hidden sm:inline">
+                    Mobile‑first, React + Tailwind UI
+                  </span>
+                </div>
+              </header>
+
+              <ProfileSelector
+                selectedId={selectedProfileId}
+                onSelect={setSelectedProfileId}
+              />
+
+              <main className="grid gap-4 lg:grid-cols-5 lg:gap-5">
+                <section className="lg:col-span-3 order-2 lg:order-1">
+                  <EnergyGraph profile={profile} />
+                </section>
+
+                <section className="lg:col-span-2 order-1 lg:order-2">
+                  <TaskPlan profile={profile} />
+                </section>
+              </main>
+
+              <footer className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <p>
+                  Tip: Revisit your profile if your{" "}
+                  <span className="text-slate-300">meal timing</span> or{" "}
+                  <span className="text-slate-300">training</span> changes.
+                </p>
+                <p className="text-slate-600">
+                  Built with React, Tailwind CSS & Recharts.
+                </p>
+              </footer>
+            </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
+

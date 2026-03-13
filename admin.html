@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel - PG Vessel Manager</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h2>PG Vessel Rotation - Admin Panel</h2>
+
+<div id="adminApp">
+
+<h3>Today's Duty</h3>
+
+<div class="card">
+Morning: <span id="morning"></span>
+</div>
+
+<div class="card">
+Afternoon: <span id="afternoon"></span>
+</div>
+
+<div class="card">
+Night: <span id="night"></span>
+</div>
+
+<div class="card">
+Weekend: <span id="weekend"></span>
+</div>
+
+<h3>Admin Functions</h3>
+
+<div class="card">
+<h4>Add Person</h4>
+<input id="newPerson" placeholder="Name">
+<div style="margin: 10px 0;">
+<label><input type="checkbox" id="availMorning" value="morning"> Morning</label>
+<label><input type="checkbox" id="availAfternoon" value="afternoon"> Afternoon</label>
+<label><input type="checkbox" id="availNight" value="night"> Night</label>
+<label><input type="checkbox" id="availWeekend" value="weekend"> Weekend</label>
+</div>
+<button onclick="addPerson()">Add Person</button>
+</div>
+
+<div class="card">
+<h4>Remove Person</h4>
+<select id="personToRemove">
+<option value="">Select person to remove</option>
+</select>
+<button onclick="removePerson()">Remove Person</button>
+</div>
+
+<div class="card">
+<h4>Edit Person Availability</h4>
+<select id="personToEdit">
+<option value="">Select person to edit</option>
+</select>
+<div style="margin: 10px 0;">
+<label><input type="checkbox" id="editMorning" value="morning"> Morning</label>
+<label><input type="checkbox" id="editAfternoon" value="afternoon"> Afternoon</label>
+<label><input type="checkbox" id="editNight" value="night"> Night</label>
+<label><input type="checkbox" id="editWeekend" value="weekend"> Weekend</label>
+</div>
+<button onclick="editPerson()">Update Availability</button>
+</div>
+
+<h3>Reminder</h3>
+
+<input type="date" id="reminderDate">
+<button onclick="setReminder()">Set Reminder</button>
+
+<h3>Analytics</h3>
+
+<div id="stats"></div>
+
+<h3>Past Schedule</h3>
+
+<div class="schedule-table-scroll">
+    <table id="pastSchedule" class="schedule-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Morning</th>
+                <th>Afternoon</th>
+                <th>Night</th>
+            </tr>
+        </thead>
+        <tbody id="pastScheduleBody">
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 20px;">
+  
+    <button onclick="goToUser()">User View</button>
+</div>
+
+</div>
+
+<script src="admin-db.js"></script>
+
+</body>
+</html>
